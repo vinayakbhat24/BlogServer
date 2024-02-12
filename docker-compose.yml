@@ -1,0 +1,52 @@
+version: '2'
+services:
+        nginx: 
+              build: ./nginx
+              volumes:
+                    - ./nginx/www:/var/www/nginx
+              ports:
+                    - "80:80"
+              networks:
+                    - se_backend  
+        hbase:
+              build: ./hbase
+              environment:
+                 - ZK_QUORUM=zookeeper-a,zookeeper-b,zookeeper-c
+              networks:
+                    - se_backend 
+              ports:
+                   - "2181:2181"
+                   - "8081:8080"
+                   - "16010:16010"
+        grproxy:
+              build: ./grproxy
+              ports:
+                    - "8080:8080" 
+              networks:
+                    - se_frontend
+                    - se_backend 
+        gserve1:
+              build: ./gserve
+              ports:
+                   - "9090"
+              networks:
+                    - se_backend 
+              environment:
+              - NAME=gserve1
+              depends_on:
+              - "hbase"
+        gserve2:
+              build: ./gserve
+              ports:
+                   - "9090"
+              networks:
+                    - se_backend 
+              environment:
+              - NAME=gserve2
+              depends_on:
+              - "hbase"
+networks:
+  se_frontend:
+    driver: bridge
+  se_backend:
+    driver: bridge
